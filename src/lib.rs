@@ -4,17 +4,10 @@ use ngx::ffi::{
     ngx_http_request_t, ngx_int_t, ngx_module_t, ngx_str_t, ngx_uint_t, NGX_CONF_TAKE1,
     NGX_HTTP_LOC_CONF, NGX_HTTP_MODULE, NGX_RS_HTTP_LOC_CONF_OFFSET, NGX_RS_MODULE_SIGNATURE,
 };
-use ngx::http::{HTTPModule, MergeConfigError, Method};
-use ngx::{
-    core,
-    core::{Status, NGX_CONF_ERROR},
-    http,
-};
+use ngx::http::{HTTPModule, MergeConfigError};
+use ngx::{core, core::Status, http};
 use ngx::{http_request_handler, ngx_log_debug_http, ngx_modules, ngx_null_command, ngx_string};
-use std::{
-    os::raw::{c_char, c_void},
-    slice,
-};
+use std::os::raw::{c_char, c_void};
 
 struct Module;
 
@@ -51,12 +44,20 @@ struct ModuleConfig {
 // Implement our Merge trait to merge configuration with higher layers.
 impl http::Merge for ModuleConfig {
     fn merge(&mut self, prev: &ModuleConfig) -> Result<(), MergeConfigError> {
+        if prev.enabled {
+            self.enabled = true;
+        }
+
         if self.method.is_empty() {
             self.method = String::from(if !prev.method.is_empty() {
                 &prev.method
             } else {
                 ""
             });
+        }
+
+        if self.enabled && self.method.is_empty() {
+            return Err(MergeConfigError::NoValue);
         }
         Ok(())
     }
