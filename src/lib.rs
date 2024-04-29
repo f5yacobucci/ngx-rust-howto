@@ -8,6 +8,7 @@ use ngx::http::{HTTPModule, MergeConfigError};
 use ngx::{core, core::Status, http};
 use ngx::{http_request_handler, ngx_log_debug_http, ngx_modules, ngx_null_command, ngx_string};
 use std::os::raw::{c_char, c_void};
+use std::ptr::addr_of;
 
 struct Module;
 
@@ -19,7 +20,7 @@ impl http::HTTPModule for Module {
     type LocConf = ModuleConfig;
 
     unsafe extern "C" fn postconfiguration(cf: *mut ngx_conf_t) -> ngx_int_t {
-        let htcf = http::ngx_http_conf_get_module_main_conf(cf, &ngx_http_core_module);
+        let htcf = http::ngx_http_conf_get_module_main_conf(cf, &*addr_of!(ngx_http_core_module));
 
         let h = ngx_array_push(
             &mut (*htcf).phases[ngx_http_phases_NGX_HTTP_ACCESS_PHASE as usize].handlers,
@@ -151,7 +152,7 @@ extern "C" fn ngx_http_howto_commands_set_method(
 //
 // The function body is implemented as a Rust closure.
 http_request_handler!(howto_access_handler, |request: &mut http::Request| {
-    let co = unsafe { request.get_module_loc_conf::<ModuleConfig>(&ngx_http_howto_module) };
+    let co = unsafe { request.get_module_loc_conf::<ModuleConfig>(&*addr_of!(ngx_http_howto_module)) };
     let co = co.expect("module config is none");
 
     ngx_log_debug_http!(request, "howto module enabled called");

@@ -8,6 +8,8 @@
 
 `cargo build`
 
+NOTE: it may be necessary to explicitly set versions of dependent software. For example, to build with a newer, more recent zlib version you can run `ZLIB_VERSION=1.3.1 cargo build`. See the `ngx-rust` README.md for details.
+
 ### Running
 
 A basic configuration file is provided in the `conf` directory. Once you've built the project you'll have a usable object in the `target/debug` directory, move this to your desired location and update the `conf/howto.con` file with the proper path and name.
